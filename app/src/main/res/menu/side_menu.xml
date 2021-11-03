@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu  xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:showIn="navigation_view" >
+    <group>
+    <!--
+    Measurement System:
+    -->
+        <item
+            android:title="Measurement System: ">
+            <menu>
+                <item
+                    android:id="@+id/menu_item_metric"
+                    android:title="Metric"
+                    app:actionViewClass="android.widget.RadioButton" />
+                <item
+                    android:id="@+id/menu_item_imperial"
+                    android:title="Imperial"
+                    app:actionViewClass="android.widget.RadioButton" />
+            </menu>
+        </item>
+    <!--
+    Marker Style:
+    -->
+        <item
+            android:title="Marker Style: ">
+            <menu>
+                <item
+                    android:id="@+id/menu_item_default"
+                    android:title="Default"
+                    app:actionViewClass="android.widget.RadioButton" />
+                <item
+                    android:id="@+id/menu_item_traditional"
+                    android:title="Traditional"
+                    app:actionViewClass="android.widget.RadioButton" />
+            </menu>
+        </item>
+    <!--
+    Filter Options:
+    -->
+        <item
+            android:title="Filter Options: ">
+            <menu>
+                <item
+                    android:id="@+id/menu_item_filter1"
+                    android:title="FIAT ATMs"
+                    app:actionViewClass="android.widget.CheckBox" />
+                <item
+                    android:id="@+id/menu_item_filter2"
+                    android:title="Banks"
+                    app:actionViewClass="android.widget.CheckBox" />
+                <item
+                    android:id="@+id/menu_item_filter3"
+                    android:title="Petrol Stations"
+                    app:actionViewClass="android.widget.CheckBox" />
+                <item
+                    android:id="@+id/menu_item_filter4"
+                    android:title="Restaurants"
+                    app:actionViewClass="android.widget.CheckBox" />
+            </menu>
+        </item>
+    <!--
+    System Options:
+    -->
+        <item
+            android:title="System Options: ">
+            <menu>
+                <item
+                    android:id="@+id/menu_item_sign_out"
+                    android:title="Sign Out"
+                    android:icon="@drawable/ic_sign_out"/>
+                <item
+                    android:id="@+id/menu_item_exit"
+                    android:title="Exit"
+                    android:icon="@drawable/ic_exit"/>
+            </menu>
+        </item>
+    </group>
+</menu>
