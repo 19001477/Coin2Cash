@@ -6,7 +6,7 @@ android {
     compileSdk 30
 
     defaultConfig {
-        applicationId "com.example.coin2cash"
+        applicationId 'pahseone.coin2cash.app'
         minSdk 26
         targetSdk 30
         versionCode 1

@@ -1,4 +1,4 @@
-package com.example.coin2cash;
+package phaseone.app.coin2cash;
 
 import org.junit.Test;
 
