@@ -6,11 +6,14 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -25,6 +28,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.coin2cash.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -37,16 +41,20 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.navigation.NavigationView;
+import com.google.maps.android.PolyUtil;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -319,6 +327,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         getDeviceLocation();
 
         readAtmList();
+
+        // adding on click listener to marker of google maps.
+        map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                //On marker click we are navigating to location
+                LatLng coords = marker.getPosition();
+                String lati = Double.toString(coords.latitude);
+                String longi = Double.toString(coords.longitude);
+
+                getDirections(lati, longi);
+                return false;
+            }
+        });
     }
 
     private void configure_map(Bundle savedInstanceState) {
@@ -385,6 +407,40 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
         updateLocationUI();
+    }
+
+    private LatLng returnDeviceLocation() {
+        /*
+         * Get the best and most recent location of the device, which may be null in rare
+         * cases when a location is not available.
+         */
+        try {
+            if (locationPermissionGranted) {
+                Task<Location> locationResult = flpc.getLastLocation();
+                locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Location> task) {
+                        if (task.isSuccessful()) {
+                            // Set the map's camera position to the current location of the device.
+                            lastKnownLocation = task.getResult();
+                        } else {
+                            Log.d(TAG, "Current location is null. Using defaults.");
+                            Log.e(TAG, "Exception: %s", task.getException());
+                            map.moveCamera(CameraUpdateFactory
+                                    .newLatLngZoom(defaultLocation, DEFAULT_ZOOM));
+                            map.getUiSettings().setMyLocationButtonEnabled(false);
+                        }
+                    }
+                });
+            }
+        } catch (SecurityException e) {
+            Log.e("Exception: %s", e.getMessage(), e);
+        }
+
+        LatLng location = new LatLng(lastKnownLocation.getLatitude(),
+                lastKnownLocation.getLongitude());
+
+        return location;
     }
 
     private void getDeviceLocation() {
@@ -463,7 +519,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                         LatLng coords = new LatLng(latitude, longitude);
 
-                        map.addMarker(new MarkerOptions().position(coords).title("Bitcoin ATM").flat(true).icon(bitmapDescriptorFromVector(getApplicationContext(), R.drawable.ic_btc_marker)));
+                        map.addMarker(new MarkerOptions().position(coords).title("Bitcoin ATM").flat(true).icon(bitmapDescriptorFromVector(getApplicationContext(), R.drawable.ic_btc_marker))).setTag(i);
                     }
                 }
                 catch (Exception e) {
@@ -491,6 +547,55 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Canvas canvas = new Canvas(bitmap);
         vectorDrawable.draw(canvas);
         return BitmapDescriptorFactory.fromBitmap(bitmap);
+    }
+
+    private void getDirections(String latitude, String longitude) {
+        // Instantiate the RequestQueue.
+        LatLng origin = returnDeviceLocation();
+
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url = "https://maps.googleapis.com/maps/api/directions/json?key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk&" +
+                "origin=" + Double.toString(origin.latitude) + "," + Double.toString(origin.latitude) + "&" +
+                "destination=" + latitude + "," + longitude + "";
+
+        //Store array from URL:
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONObject directions = (JSONObject) response.get("routes"); //Store objects from the array
+
+                    JSONObject routes = (JSONObject) directions.get("overview_polyline");
+
+                    JSONObject overview_polyline = (JSONObject) directions.get("points");
+
+                    if (overview_polyline != null) {
+                        String points = overview_polyline.getString("points");
+                        drawPolyLines(points);
+                    }
+                }
+                catch (Exception e) {
+                    //Display error:
+                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
+                    Log.d("JSON Error", "" + e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //Display error:
+                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
+                Log.d("onErrorResponse", "" + error.toString());
+            }
+        });
+
+        queue.add(request); //Add request to queue
+    }
+
+    private void drawPolyLines(String points) {
+        List<LatLng> decodedPath = PolyUtil.decode(points);
+
+        map.addPolyline(new PolylineOptions().addAll(decodedPath));
     }
     // =============================================================================================
 }
