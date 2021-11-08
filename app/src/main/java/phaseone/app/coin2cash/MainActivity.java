@@ -1,19 +1,11 @@
 package phaseone.app.coin2cash;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -23,16 +15,26 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.directions.route.AbstractRouting;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.Routing;
+import com.directions.route.RoutingListener;
 import com.example.coin2cash.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -43,22 +45,21 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.navigation.NavigationView;
-import com.google.maps.android.PolyUtil;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, RoutingListener {
 
     // MAP ELEMENTS:
     // =============================================================================================
@@ -334,10 +335,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public boolean onMarkerClick(Marker marker) {
                 //On marker click we are navigating to location
                 LatLng coords = marker.getPosition();
-                String lati = Double.toString(coords.latitude);
-                String longi = Double.toString(coords.longitude);
 
-                getDirections(lati, longi);
+                getDirections(coords);
                 return false;
             }
         });
@@ -549,53 +548,61 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
-    private void getDirections(String latitude, String longitude) {
-        // Instantiate the RequestQueue.
-        LatLng origin = returnDeviceLocation();
-
-        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-        String url = "https://maps.googleapis.com/maps/api/directions/json?key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk&" +
-                "origin=" + Double.toString(origin.latitude) + "," + Double.toString(origin.latitude) + "&" +
-                "destination=" + latitude + "," + longitude + "";
-
-        //Store array from URL:
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    JSONObject directions = (JSONObject) response.get("routes"); //Store objects from the array
-
-                    JSONObject routes = (JSONObject) directions.get("overview_polyline");
-
-                    JSONObject overview_polyline = (JSONObject) directions.get("points");
-
-                    if (overview_polyline != null) {
-                        String points = overview_polyline.getString("points");
-                        drawPolyLines(points);
-                    }
-                }
-                catch (Exception e) {
-                    //Display error:
-                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
-                    Log.d("JSON Error", "" + e.toString());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                //Display error:
-                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
-                Log.d("onErrorResponse", "" + error.toString());
-            }
-        });
-
-        queue.add(request); //Add request to queue
+    private void getDirections(LatLng destPosition) {
+        Routing routing = new Routing.Builder()
+                .travelMode(AbstractRouting.TravelMode.DRIVING)
+                .withListener(this)
+                .waypoints(returnDeviceLocation(), destPosition, destPosition)
+                .key("AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk")
+                .build();
+        routing.execute();
     }
 
-    private void drawPolyLines(String points) {
-        List<LatLng> decodedPath = PolyUtil.decode(points);
+    @Override
+    public void onRoutingFailure(RouteException e) {
+        Log.e("check", e.getMessage());
+    }
 
-        map.addPolyline(new PolylineOptions().addAll(decodedPath));
+    @Override
+    public void onRoutingStart() {
+        Log.e("check", "onRoutingStart");
+    }
+
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
+
+        Log.e("check", "onRoutingSuccess");
+        CameraUpdate center = CameraUpdateFactory.newLatLng(returnDeviceLocation());
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo(16);
+        List<Polyline> polylines = new ArrayList<>();
+
+        map.moveCamera(center);
+
+
+        if (polylines.size() > 0) {
+            for (Polyline poly : polylines) {
+                poly.remove();
+            }
+        }
+
+        polylines = new ArrayList<>();
+        //add route(s) to the map.
+        for (int i = 0; i < route.size(); i++) {
+
+            //In case of more than 5 alternative routes
+
+            PolylineOptions polyOptions = new PolylineOptions();
+            polyOptions.color(getResources().getColor(R.color.quantum_googblue600));
+            polyOptions.width(10 + i * 3);
+            polyOptions.addAll(route.get(i).getPoints());
+            Polyline polyline = map.addPolyline(polyOptions);
+            polylines.add(polyline);
+        }
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+        Log.e("check", "onRoutingCancelled");
     }
     // =============================================================================================
 }
