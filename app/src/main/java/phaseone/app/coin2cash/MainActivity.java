@@ -25,6 +25,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.directions.route.AbstractRouting;
 import com.directions.route.Route;
@@ -52,6 +53,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.navigation.NavigationView;
+import com.google.gson.JsonArray;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -112,6 +114,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     final int MENU_ITEM_SIGN_OUT = R.id.menu_item_sign_out;
     final int MENU_ITEM_EXIT = R.id.menu_item_exit;
     // =============================================================================================
+
+    private String travelTime;
+    private String travelDistance;
 
     // ACTIVITY START & CREATE
     // =============================================================================================
@@ -556,6 +561,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .key("AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk")
                 .build();
         routing.execute();
+
+        String duration = getTravelTime(returnDeviceLocation(), destPosition);
+        String distance = getTravelDistance(returnDeviceLocation(), destPosition);
+
+        Toast.makeText(getApplicationContext(), "Duration = " + duration + " Distance = " + distance, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -603,6 +613,82 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onRoutingCancelled() {
         Log.e("check", "onRoutingCancelled");
+    }
+
+    private String getTravelTime(LatLng origin, LatLng destination) {
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url ="https://maps.googleapis.com/maps/api/directions/json?" +
+                "origin=" + origin.latitude + "," + origin.longitude + "&" +
+                "destination=" + destination.latitude + "," + destination.longitude + "&" +
+                "key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
+
+        //Store array from URL:
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray route = response.getJSONArray("routes"); //Store objects from the array
+                    JSONArray legs = route.getJSONObject(0).getJSONArray("legs");
+
+                    travelTime = legs.getJSONObject(0).getJSONObject("duration").getString("text");
+                }
+                catch (Exception e) {
+                    //Display error:
+                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
+                    Log.d("JSON Error", "" + e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //Display error:
+                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
+                Log.d("onErrorResponse", "" + error.toString());
+            }
+        });
+
+        queue.add(request); //Add request to queue
+
+        return travelTime;
+    }
+
+    private String getTravelDistance(LatLng origin, LatLng destination) {
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url ="https://maps.googleapis.com/maps/api/directions/json?" +
+                "origin=" + origin.latitude + "," + origin.longitude + "&" +
+                "destination=" + destination.latitude + "," + destination.longitude + "&" +
+                "key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
+
+        //Store array from URL:
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray route = response.getJSONArray("routes"); //Store objects from the array
+                    JSONArray legs = route.getJSONObject(0).getJSONArray("legs");
+
+                    travelDistance = legs.getJSONObject(0).getJSONObject("distance").getString("text");
+                }
+                catch (Exception e) {
+                    //Display error:
+                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
+                    Log.d("JSON Error", "" + e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //Display error:
+                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
+                Log.d("onErrorResponse", "" + error.toString());
+            }
+        });
+
+        queue.add(request); //Add request to queue
+
+        return travelDistance;
     }
     // =============================================================================================
 }
