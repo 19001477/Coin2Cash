@@ -118,6 +118,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String travelTime;
     private String travelDistance;
 
+    private List<Polyline> polylines;
+
+    private String units;
+
     // ACTIVITY START & CREATE
     // =============================================================================================
     @Override
@@ -342,6 +346,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 LatLng coords = marker.getPosition();
 
                 getDirections(coords);
+
                 return false;
             }
         });
@@ -554,6 +559,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void getDirections(LatLng destPosition) {
+        removeRoute();
+
         Routing routing = new Routing.Builder()
                 .travelMode(AbstractRouting.TravelMode.DRIVING)
                 .withListener(this)
@@ -561,6 +568,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .key("AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk")
                 .build();
         routing.execute();
+
+
 
         String duration = getTravelTime(returnDeviceLocation(), destPosition);
         String distance = getTravelDistance(returnDeviceLocation(), destPosition);
@@ -580,14 +589,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
-
         Log.e("check", "onRoutingSuccess");
-        CameraUpdate center = CameraUpdateFactory.newLatLng(returnDeviceLocation());
-        CameraUpdate zoom = CameraUpdateFactory.zoomTo(16);
-        List<Polyline> polylines = new ArrayList<>();
-
-        map.moveCamera(center);
-
+        polylines = new ArrayList<>();
 
         if (polylines.size() > 0) {
             for (Polyline poly : polylines) {
@@ -689,6 +692,57 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         queue.add(request); //Add request to queue
 
         return travelDistance;
+    }
+
+    private void getPOI(String type) {
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url ="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + returnDeviceLocation().latitude + "," + returnDeviceLocation().longitude + "&radius=1000&types=" + type + "&key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
+
+        //Store array from URL:
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray results = response.getJSONArray("results"); //Store objects from the array
+
+                    for (int i = 0; i < results.length(); i++) {
+                        String name = results.getJSONObject(i).getString("name");
+                        LatLng location = new LatLng(Double.parseDouble(results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getString("lat")),
+                                                     Double.parseDouble(results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getString("lng")));
+
+                        map.addMarker(new MarkerOptions().position(location).title(name).flat(true)).setTag(type);
+                    }
+                }
+                catch (Exception e) {
+                    //Display error:
+                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
+                    Log.d("JSON Error", "" + e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //Display error:
+                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
+                Log.d("onErrorResponse", "" + error.toString());
+            }
+        });
+
+        queue.add(request); //Add request to queue
+    }
+
+    public void removeRoute() {
+        try {
+            if (!polylines.isEmpty()) {
+                for (Polyline poly : polylines) {
+                    poly.remove();
+                }
+            }
+        }
+        catch (Exception e) {
+            System.out.println(e.toString());
+        }
     }
     // =============================================================================================
 }
