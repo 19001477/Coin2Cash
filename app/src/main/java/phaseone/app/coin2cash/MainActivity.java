@@ -139,10 +139,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String travelDistance;
 
     private Map<String, Boolean> userSettings = new HashMap<>();
+    private String units;
+    private int markerIcon;
 
     private List<Polyline> polylines;
-
-    private String units;
     // =============================================================================================
 
     // ACTIVITY START & CREATE
@@ -256,7 +256,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         side_menu.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-
                 switch (item.getItemId()) {
                     case MENU_ITEM_METRIC:
                         //
@@ -384,7 +383,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     if (login.equalsIgnoreCase("true")) {
                         //If login success then...
-                        getUserSettings(email);
+                        getUserDetails(email);
                         initialize_main_components();
                     }
                     else if (login.equalsIgnoreCase("false")) {
@@ -410,7 +409,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         queue.add(request); //Add request to queue
     }
 
-    private void getUserSettings(String email) {
+    private void getUserDetails(String email) {
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String url ="https://coin2cash-p1.000webhostapp.com/readUser.php?email=" + email;
@@ -420,15 +419,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(JSONArray response) {
                 try {
-                    JSONObject userSettings = (JSONObject) response.get(0); //Store objects from the array
+                    JSONObject userDetails = (JSONObject) response.get(0); //Store objects from the array
 
                     //Store values from the array:
-                    userSettings.put("units", Boolean.parseBoolean(userSettings.getString("unitsSetting")));
-                    userSettings.put("markers", Boolean.parseBoolean(userSettings.getString("markerSetting")));
-                    userSettings.put("opt1", Boolean.parseBoolean(userSettings.getString("opt1Setting")));
-                    userSettings.put("opt2", Boolean.parseBoolean(userSettings.getString("opt2Setting")));
-                    userSettings.put("opt3", Boolean.parseBoolean(userSettings.getString("opt3Setting")));
-                    userSettings.put("opt4", Boolean.parseBoolean(userSettings.getString("opt4Setting")));
+                    USER_EMAIL = userDetails.getString("email");
+                    USER_NAME = userDetails.getString("fullname");
+
+                    userSettings.put("units", Boolean.parseBoolean(userDetails.getString("unitsSetting")));
+                    units = userDetails.getString("unitsSetting");
+                    userSettings.put("markers", Boolean.parseBoolean(userDetails.getString("markerSetting")));
+                    userSettings.put("opt1", Boolean.parseBoolean(userDetails.getString("opt1Setting")));
+                    userSettings.put("opt2", Boolean.parseBoolean(userDetails.getString("opt2Setting")));
+                    userSettings.put("opt3", Boolean.parseBoolean(userDetails.getString("opt3Setting")));
+                    userSettings.put("opt4", Boolean.parseBoolean(userDetails.getString("opt4Setting")));
+
+                    if (userSettings.get("units") == false) {
+                        units = "metric";
+                    }
+                    else {
+                        units = "imperial";
+                    }
+
+                    if (userSettings.get("markers") == false) {
+                        //markerIcon = R.id
+                    }
+                    else {
+                        //markerIcon = R.id
+                    }
                 }
                 catch (Exception e) {
                     //Display error:
@@ -446,6 +463,69 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
         queue.add(request); //Add request to queue
+    }
+
+    private void updateUser() {
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url ="https://coin2cash-p1.000webhostapp.com/updateUser.php?email=" + USER_EMAIL + "&" +
+                    "opt1=";
+
+        //Store array from URL:
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                try {
+                    JSONObject userDetails = (JSONObject) response.get(0); //Store objects from the array
+
+                    //Store values from the array:
+                    USER_EMAIL = userDetails.getString("email");
+                    USER_NAME = userDetails.getString("fullname");
+
+                    userSettings.put("units", Boolean.parseBoolean(userDetails.getString("unitsSetting")));
+                    units = userDetails.getString("unitsSetting");
+                    userSettings.put("markers", Boolean.parseBoolean(userDetails.getString("markerSetting")));
+                    userSettings.put("opt1", Boolean.parseBoolean(userDetails.getString("opt1Setting")));
+                    userSettings.put("opt2", Boolean.parseBoolean(userDetails.getString("opt2Setting")));
+                    userSettings.put("opt3", Boolean.parseBoolean(userDetails.getString("opt3Setting")));
+                    userSettings.put("opt4", Boolean.parseBoolean(userDetails.getString("opt4Setting")));
+
+                    if (userSettings.get("units") == false) {
+                        units = "metric";
+                    }
+                    else {
+                        units = "imperial";
+                    }
+
+                    if (userSettings.get("markers") == false) {
+                        //markerIcon = R.id
+                    }
+                    else {
+                        //markerIcon = R.id
+                    }
+                }
+                catch (Exception e) {
+                    //Display error:
+                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
+                    Log.d("JSON Error", "" + e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //Display error:
+                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
+                Log.d("onErrorResponse", "" + error.toString());
+            }
+        });
+
+        queue.add(request); //Add request to queue
+    }
+
+    private void updateSettingsMap() {
+        Boolean opt1, opt2, opt3, opt4, units, markers;
+
+        
     }
 
     @Override
