@@ -79,9 +79,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int DEFAULT_ZOOM = 24;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean locationPermissionGranted;
-
-    String USER_NAME;
-    String USER_EMAIL;
     // =============================================================================================
 
     // UI ELEMENTS:
@@ -131,6 +128,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     final int MENU_ITEM_EXIT = R.id.menu_item_exit;
     // =============================================================================================
 
+    // VAR:
+    // =============================================================================================
+    private String USER_NAME;
+    private String USER_EMAIL;
+
+    private String travelTime;
+    private String travelDistance;
+
+    private List<Polyline> polylines;
+
+    private String units;
+    // =============================================================================================
+
     // ACTIVITY START & CREATE
     // =============================================================================================
     @Override
@@ -175,7 +185,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         side_menu = findViewById(R.id.side_menu);
 
-        //
+        View header = side_menu.getHeaderView(R.layout.side_menu_header);
+        side_menu_header_name = header.findViewById(R.id.side_menu_header_name);
+        side_menu_header_email = header.findViewById(R.id.side_menu_header_email);
+
+        side_menu_header_name.setText(USER_NAME);
+        side_menu_header_email.setText(USER_EMAIL);
 
         ui_nav_main();
 
@@ -306,9 +321,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String url ="https://coin2cash-p1.000webhostapp.com/createUser.php?email=" + email + "&" +
-                    "password=" + password + "&" +
-                    "name=" + name + "&" +
-                    "surname=" + surname;
+                "password=" + password + "&" +
+                "name=" + name + "&" +
+                "surname=" + surname;
 
         //Store array from URL:
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
@@ -322,11 +337,54 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     if (inserted.equalsIgnoreCase("true")) {
                         //If inserted then...
-
+                        initialize_login_components();
                     }
                     else if (inserted.equalsIgnoreCase("false")) {
                         //If insert failed then...
+                        Toast.makeText(getApplicationContext(), "Email already exists", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                catch (Exception e) {
+                    //Display error:
+                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
+                    Log.d("JSON Error", "" + e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //Display error:
+                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
+                Log.d("onErrorResponse", "" + error.toString());
+            }
+        });
 
+        queue.add(request); //Add request to queue
+    }
+
+    private void checkUser(String email, String password) {
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url ="https://coin2cash-p1.000webhostapp.com/checkUser.php?email=" + email + "&" +
+                "password=" + password;
+
+        //Store array from URL:
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                try {
+                    JSONObject loginStatus = (JSONObject) response.get(0); //Store objects from the array
+
+                    //Store values from the array:
+                    String login = loginStatus.getString("login");
+
+                    if (login.equalsIgnoreCase("true")) {
+                        //If login success then...
+                        initialize_main_components();
+                    }
+                    else if (login.equalsIgnoreCase("false")) {
+                        //If login failed then...
+                        Toast.makeText(getApplicationContext(), "Incorrect login details", Toast.LENGTH_SHORT).show();
                     }
                 }
                 catch (Exception e) {
@@ -601,6 +659,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void getDirections(LatLng destPosition) {
+        removeRoute();
+
         Routing routing = new Routing.Builder()
                 .travelMode(AbstractRouting.TravelMode.DRIVING)
                 .withListener(this)
@@ -608,6 +668,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .key("AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk")
                 .build();
         routing.execute();
+
+
 
         String duration = getTravelTime(returnDeviceLocation(), destPosition);
         String distance = getTravelDistance(returnDeviceLocation(), destPosition);
@@ -627,14 +689,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
-
         Log.e("check", "onRoutingSuccess");
-        CameraUpdate center = CameraUpdateFactory.newLatLng(returnDeviceLocation());
-        CameraUpdate zoom = CameraUpdateFactory.zoomTo(16);
-        List<Polyline> polylines = new ArrayList<>();
-
-        map.moveCamera(center);
-
+        polylines = new ArrayList<>();
 
         if (polylines.size() > 0) {
             for (Polyline poly : polylines) {
@@ -663,13 +719,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private String getTravelTime(LatLng origin, LatLng destination) {
-        final String[] travelTime = new String[1];
-
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String url ="https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=" + origin.latitude + "," + origin.longitude + "&" +
                 "destination=" + destination.latitude + "," + destination.longitude + "&" +
+                "units=" + units + "&" +
                 "key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
 
         //Store array from URL:
@@ -680,7 +735,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     JSONArray route = response.getJSONArray("routes"); //Store objects from the array
                     JSONArray legs = route.getJSONObject(0).getJSONArray("legs");
 
-                    travelTime[0] = legs.getJSONObject(0).getJSONObject("duration").getString("text");
+                    travelTime = legs.getJSONObject(0).getJSONObject("duration").getString("text");
                 }
                 catch (Exception e) {
                     //Display error:
@@ -699,17 +754,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         queue.add(request); //Add request to queue
 
-        return travelTime[0];
+        return travelTime;
     }
 
     private String getTravelDistance(LatLng origin, LatLng destination) {
-        final String[] travelDistance = new String[1];
-
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String url ="https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=" + origin.latitude + "," + origin.longitude + "&" +
                 "destination=" + destination.latitude + "," + destination.longitude + "&" +
+                "units=" + units + "&" +
                 "key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
 
         //Store array from URL:
@@ -720,7 +774,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     JSONArray route = response.getJSONArray("routes"); //Store objects from the array
                     JSONArray legs = route.getJSONObject(0).getJSONArray("legs");
 
-                    travelDistance[0] = legs.getJSONObject(0).getJSONObject("distance").getString("text");
+                    travelDistance = legs.getJSONObject(0).getJSONObject("distance").getString("text");
                 }
                 catch (Exception e) {
                     //Display error:
@@ -739,7 +793,62 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         queue.add(request); //Add request to queue
 
-        return travelDistance[0];
+        return travelDistance;
+    }
+
+    private void getPOIs(String type) {
+
+    }
+
+    public void placePOIMarkers(String type) {
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url ="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + returnDeviceLocation().latitude + "," + returnDeviceLocation().longitude + "&radius=1000&types=" + type + "&key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
+
+        //Store array from URL:
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray results = response.getJSONArray("results"); //Store objects from the array
+
+                    for (int i = 0; i < results.length(); i++) {
+                        String name = results.getJSONObject(i).getString("name");
+                        LatLng location = new LatLng(Double.parseDouble(results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getString("lat")),
+                                Double.parseDouble(results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getString("lng")));
+
+                        map.addMarker(new MarkerOptions().position(location).title(name).flat(true)).setTag(type);
+                    }
+                }
+                catch (Exception e) {
+                    //Display error:
+                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
+                    Log.d("JSON Error", "" + e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //Display error:
+                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
+                Log.d("onErrorResponse", "" + error.toString());
+            }
+        });
+
+        queue.add(request); //Add request to queue
+    }
+
+    public void removeRoute() {
+        try {
+            if (!polylines.isEmpty()) {
+                for (Polyline poly : polylines) {
+                    poly.remove();
+                }
+            }
+        }
+        catch (Exception e) {
+            System.out.println(e.toString());
+        }
     }
     // =============================================================================================
 }
