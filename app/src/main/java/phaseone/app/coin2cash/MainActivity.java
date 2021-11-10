@@ -59,7 +59,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, RoutingListener {
 
@@ -117,6 +119,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private String travelTime;
     private String travelDistance;
+
+    private Map<String, Boolean> userSettings = new HashMap<>();
 
     private List<Polyline> polylines;
 
@@ -236,13 +240,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
                     case MENU_ITEM_METRIC:
-                        if (item.isChecked()) {
-
-                        }
-                        units = "metric";
+                        //
                         break;
                     case MENU_ITEM_IMPERIAL:
-                        units = "imperial";
+                        //
                         break;
                     case MENU_ITEM_DEFAULT:
                         //
@@ -252,7 +253,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         break;
                     case MENU_ITEM_FILTER1:
                         //ATMS
-
                         break;
                     case MENU_ITEM_FILTER2:
                         //BANKS
@@ -290,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         String url ="https://coin2cash-p1.000webhostapp.com/createUser.php?email=" + email + "&" +
                     "password=" + password + "&" +
                     "name=" + name + "&" +
-                    "surname=" + surname + "&";
+                    "surname=" + surname;
 
         //Store array from URL:
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
@@ -347,12 +347,51 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     if (login.equalsIgnoreCase("true")) {
                         //If login success then...
+                        getUserSettings(email);
                         initialize_main_components();
                     }
                     else if (login.equalsIgnoreCase("false")) {
                         //If login failed then...
                         Toast.makeText(getApplicationContext(), "Incorrect login details", Toast.LENGTH_SHORT).show();
                     }
+                }
+                catch (Exception e) {
+                    //Display error:
+                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
+                    Log.d("JSON Error", "" + e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //Display error:
+                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
+                Log.d("onErrorResponse", "" + error.toString());
+            }
+        });
+
+        queue.add(request); //Add request to queue
+    }
+
+    private void getUserSettings(String email) {
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url ="https://coin2cash-p1.000webhostapp.com/readUser.php?email=" + email;
+
+        //Store array from URL:
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                try {
+                    JSONObject userSettings = (JSONObject) response.get(0); //Store objects from the array
+
+                    //Store values from the array:
+                    userSettings.put("units", Boolean.parseBoolean(userSettings.getString("unitsSetting")));
+                    userSettings.put("markers", Boolean.parseBoolean(userSettings.getString("markerSetting")));
+                    userSettings.put("opt1", Boolean.parseBoolean(userSettings.getString("opt1Setting")));
+                    userSettings.put("opt2", Boolean.parseBoolean(userSettings.getString("opt2Setting")));
+                    userSettings.put("opt3", Boolean.parseBoolean(userSettings.getString("opt3Setting")));
+                    userSettings.put("opt4", Boolean.parseBoolean(userSettings.getString("opt4Setting")));
                 }
                 catch (Exception e) {
                     //Display error:
