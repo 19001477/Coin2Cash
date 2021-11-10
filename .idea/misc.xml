@@ -3,9 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Users/wesle/Desktop/Coin2Cash/app/src/main/res/layout/activity_main.xml" value="0.25" />
         <entry key="..\:/Users/wesle/Desktop/Coin2Cash/app/src/main/res/layout/location_details.xml" value="0.25" />
-        <entry key="..\:/Users/wesle/Desktop/Coin2Cash/app/src/main/res/layout/side_menu_header.xml" value="0.25" />
         <entry key="..\:/Users/wesle/Desktop/Coin2Cash/app/src/main/res/menu/side_menu.xml" value="0.25" />
         <entry key="..\:/Users/wesle/Desktop/DISD/Coin2Cash/app/src/main/res/drawable/header_style.xml" value="0.3828125" />
         <entry key="..\:/Users/wesle/Desktop/DISD/Coin2Cash/app/src/main/res/drawable/ic_exit.xml" value="0.3828125" />
@@ -19,10 +17,16 @@
         <entry key="..\:/Users/wesle/Desktop/DISD/Coin2Cash/app/src/main/res/layout/register.xml" value="0.25416666666666665" />
         <entry key="..\:/Users/wesle/Desktop/DISD/Coin2Cash/app/src/main/res/layout/side_menu_header.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/wesle/Desktop/DISD/Coin2Cash/app/src/main/res/menu/side_menu.xml" value="0.264" />
+        <entry key="app/src/main/res/drawable/ic_btc.xml" value="0.40520833333333334" />
+        <entry key="app/src/main/res/drawable/ic_btc_marker.xml" value="0.4197916666666667" />
+        <entry key="app/src/main/res/drawable/ic_exit.xml" value="0.40520833333333334" />
+        <entry key="app/src/main/res/drawable/ic_favourite.xml" value="0.40520833333333334" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.3890625" />
         <entry key="app/src/main/res/layout/location_details.xml" value="0.3890625" />
-        <entry key="app/src/main/res/layout/login.xml" value="0.2203125" />
+        <entry key="app/src/main/res/layout/login.xml" value="0.33" />
         <entry key="app/src/main/res/layout/register.xml" value="0.3890625" />
+        <entry key="app/src/main/res/layout/side_menu_header.xml" value="0.4036458333333333" />
+        <entry key="app/src/main/res/menu/side_menu.xml" value="0.4036458333333333" />
       </map>
     </option>
   </component>
