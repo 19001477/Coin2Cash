@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -52,6 +53,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.navigation.NavigationView;
 import com.google.gson.JsonArray;
 
@@ -77,6 +79,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final int DEFAULT_ZOOM = 24;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean locationPermissionGranted;
+
+    String USER_NAME;
+    String USER_EMAIL;
     // =============================================================================================
 
     // UI ELEMENTS:
@@ -100,6 +105,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // MAIN:
     //View map;
     NavigationView side_menu;
+
+    // SIDE MENU HEADER:
+    TextView side_menu_header_name;
+    TextView side_menu_header_email;
+
+    // LOCATION DETAILS:
+    BottomSheetDialog bs;
+    TextView txt_lat;
+    TextView txt_long;
+    TextView txt_distance;
+    TextView txt_time;
     Button btn_directions;
     ImageView btn_fav;
 
@@ -114,13 +130,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     final int MENU_ITEM_SIGN_OUT = R.id.menu_item_sign_out;
     final int MENU_ITEM_EXIT = R.id.menu_item_exit;
     // =============================================================================================
-
-    private String travelTime;
-    private String travelDistance;
-
-    private List<Polyline> polylines;
-
-    private String units;
 
     // ACTIVITY START & CREATE
     // =============================================================================================
@@ -146,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         btn_clear_reg = findViewById(R.id.btnClear);
         btn_back_reg = findViewById(R.id.btnBack);
 
-        ui_nav();
+        ui_nav_reg();
     }
 
     private void initialize_login_components() {
@@ -158,22 +167,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         btn_clear_login = findViewById(R.id.btnClear);
         btn_register_login = findViewById(R.id.btnRegister);
 
-        //ui_nav();
+        ui_nav_login();
     }
 
     private void initialize_main_components() {
         setContentView(R.layout.activity_main);
 
-        //map = findViewById(R.id.map);
-        //side_menu = findViewById(R.id.side_menu);
-        btn_directions = findViewById(R.id.btnDirections);
-        btn_fav = findViewById(R.id.btnFavourite);
+        side_menu = findViewById(R.id.side_menu);
+
+        //
+
+        ui_nav_main();
 
         loadMap();
-        //ui_nav();
     }
 
-    private void ui_nav() {
+    private void ui_nav_reg() {
         btn_register_reg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -185,7 +194,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         btn_clear_reg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //
+                txt_email_reg.setText("");
+                txt_name_reg.setText("");
+                txt_surname_reg.setText("");
+                txt_password_reg.setText("");
             }
         });
 
@@ -195,7 +207,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 initialize_login_components();
             }
         });
+    }
 
+    private void ui_nav_login() {
         btn_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -206,7 +220,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         btn_clear_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //
+                txt_email_login.setText("");
+                txt_password_login.setText("");
             }
         });
 
@@ -216,33 +231,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 initialize_reg_components();
             }
         });
+    }
 
-        btn_directions.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //
-            }
-        });
-
-        btn_fav.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //
-            }
-        });
-
+    private void ui_nav_main() {
         side_menu.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
                 switch (item.getItemId()) {
                     case MENU_ITEM_METRIC:
-                        if (item.isChecked()) {
-
-                        }
-                        units = "metric";
+                        //
                         break;
                     case MENU_ITEM_IMPERIAL:
-                        units = "imperial";
+                        //
                         break;
                     case MENU_ITEM_DEFAULT:
                         //
@@ -251,17 +252,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         //
                         break;
                     case MENU_ITEM_FILTER1:
-                        //ATMS
-
+                        //
                         break;
                     case MENU_ITEM_FILTER2:
-                        //BANKS
+                        //
                         break;
                     case MENU_ITEM_FILTER3:
-                        //CASINOS
+                        //
                         break;
                     case MENU_ITEM_FILTER4:
-                        //CAFES
+                        //
                         break;
                     case MENU_ITEM_SIGN_OUT:
                         initialize_login_components();
@@ -270,7 +270,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         System.exit(0);
                         break;
                 }
+
                 return false;
+            }
+        });
+    }
+
+    private void ui_nav_directions(LatLng coords) {
+        btn_directions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getDirections(coords);
+                bs.dismiss();
+            }
+        });
+
+        btn_fav.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //
             }
         });
     }
@@ -290,7 +308,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         String url ="https://coin2cash-p1.000webhostapp.com/createUser.php?email=" + email + "&" +
                     "password=" + password + "&" +
                     "name=" + name + "&" +
-                    "surname=" + surname + "&";
+                    "surname=" + surname;
 
         //Store array from URL:
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
@@ -304,54 +322,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     if (inserted.equalsIgnoreCase("true")) {
                         //If inserted then...
-                        initialize_login_components();
+
                     }
                     else if (inserted.equalsIgnoreCase("false")) {
                         //If insert failed then...
-                        Toast.makeText(getApplicationContext(), "Email already exists", Toast.LENGTH_SHORT).show();
-                    }
-                }
-                catch (Exception e) {
-                    //Display error:
-                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
-                    Log.d("JSON Error", "" + e.toString());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                //Display error:
-                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
-                Log.d("onErrorResponse", "" + error.toString());
-            }
-        });
 
-        queue.add(request); //Add request to queue
-    }
-
-    private void checkUser(String email, String password) {
-        // Instantiate the RequestQueue.
-        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-        String url ="https://coin2cash-p1.000webhostapp.com/checkUser.php?email=" + email + "&" +
-                "password=" + password;
-
-        //Store array from URL:
-        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
-            @Override
-            public void onResponse(JSONArray response) {
-                try {
-                    JSONObject loginStatus = (JSONObject) response.get(0); //Store objects from the array
-
-                    //Store values from the array:
-                    String login = loginStatus.getString("login");
-
-                    if (login.equalsIgnoreCase("true")) {
-                        //If login success then...
-                        initialize_main_components();
-                    }
-                    else if (login.equalsIgnoreCase("false")) {
-                        //If login failed then...
-                        Toast.makeText(getApplicationContext(), "Incorrect login details", Toast.LENGTH_SHORT).show();
                     }
                 }
                 catch (Exception e) {
@@ -390,11 +365,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //On marker click we are navigating to location
                 LatLng coords = marker.getPosition();
 
-                getDirections(coords);
+                //getDirections(coords);
+                display_bottom_sheet(coords);
 
                 return false;
             }
         });
+    }
+
+    private void display_bottom_sheet(LatLng coords) {
+        bs = new BottomSheetDialog(this);
+        bs.setContentView(R.layout.location_details);
+
+        txt_lat = bs.findViewById(R.id.location_details_lat);
+        txt_long = bs.findViewById(R.id.location_details_long);
+        txt_distance = bs.findViewById(R.id.location_details_distance);
+        txt_time = bs.findViewById(R.id.location_details_time);
+        btn_directions = bs.findViewById(R.id.btnDirections);
+        btn_fav = bs.findViewById(R.id.btnFavourite);
+
+        txt_lat.setText("" + coords.latitude);
+        txt_long.setText("" + coords.longitude);
+        txt_distance.setText(getTravelDistance(returnDeviceLocation(), coords));
+        txt_time.setText(getTravelTime(returnDeviceLocation(), coords));
+
+        ui_nav_directions(coords);
+
+        bs.show();
     }
 
     private void configure_map(Bundle savedInstanceState) {
@@ -604,8 +601,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void getDirections(LatLng destPosition) {
-        removeRoute();
-
         Routing routing = new Routing.Builder()
                 .travelMode(AbstractRouting.TravelMode.DRIVING)
                 .withListener(this)
@@ -613,8 +608,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .key("AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk")
                 .build();
         routing.execute();
-
-
 
         String duration = getTravelTime(returnDeviceLocation(), destPosition);
         String distance = getTravelDistance(returnDeviceLocation(), destPosition);
@@ -634,8 +627,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
+
         Log.e("check", "onRoutingSuccess");
-        polylines = new ArrayList<>();
+        CameraUpdate center = CameraUpdateFactory.newLatLng(returnDeviceLocation());
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo(16);
+        List<Polyline> polylines = new ArrayList<>();
+
+        map.moveCamera(center);
+
 
         if (polylines.size() > 0) {
             for (Polyline poly : polylines) {
@@ -664,12 +663,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private String getTravelTime(LatLng origin, LatLng destination) {
+        final String[] travelTime = new String[1];
+
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String url ="https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=" + origin.latitude + "," + origin.longitude + "&" +
                 "destination=" + destination.latitude + "," + destination.longitude + "&" +
-                "units=" + units + "&" +
                 "key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
 
         //Store array from URL:
@@ -680,7 +680,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     JSONArray route = response.getJSONArray("routes"); //Store objects from the array
                     JSONArray legs = route.getJSONObject(0).getJSONArray("legs");
 
-                    travelTime = legs.getJSONObject(0).getJSONObject("duration").getString("text");
+                    travelTime[0] = legs.getJSONObject(0).getJSONObject("duration").getString("text");
                 }
                 catch (Exception e) {
                     //Display error:
@@ -699,16 +699,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         queue.add(request); //Add request to queue
 
-        return travelTime;
+        return travelTime[0];
     }
 
     private String getTravelDistance(LatLng origin, LatLng destination) {
+        final String[] travelDistance = new String[1];
+
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String url ="https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=" + origin.latitude + "," + origin.longitude + "&" +
                 "destination=" + destination.latitude + "," + destination.longitude + "&" +
-                "units=" + units + "&" +
                 "key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
 
         //Store array from URL:
@@ -719,7 +720,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     JSONArray route = response.getJSONArray("routes"); //Store objects from the array
                     JSONArray legs = route.getJSONObject(0).getJSONArray("legs");
 
-                    travelDistance = legs.getJSONObject(0).getJSONObject("distance").getString("text");
+                    travelDistance[0] = legs.getJSONObject(0).getJSONObject("distance").getString("text");
                 }
                 catch (Exception e) {
                     //Display error:
@@ -738,62 +739,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         queue.add(request); //Add request to queue
 
-        return travelDistance;
-    }
-
-    private void getPOIs(String type) {
-
-    }
-
-    public void placePOIMarkers(String type) {
-        // Instantiate the RequestQueue.
-        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-        String url ="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + returnDeviceLocation().latitude + "," + returnDeviceLocation().longitude + "&radius=1000&types=" + type + "&key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
-
-        //Store array from URL:
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    JSONArray results = response.getJSONArray("results"); //Store objects from the array
-
-                    for (int i = 0; i < results.length(); i++) {
-                        String name = results.getJSONObject(i).getString("name");
-                        LatLng location = new LatLng(Double.parseDouble(results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getString("lat")),
-                                Double.parseDouble(results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getString("lng")));
-
-                        map.addMarker(new MarkerOptions().position(location).title(name).flat(true)).setTag(type);
-                    }
-                }
-                catch (Exception e) {
-                    //Display error:
-                    Toast.makeText(getApplicationContext(), "JSON Error: " + e.toString(), Toast.LENGTH_SHORT).show();
-                    Log.d("JSON Error", "" + e.toString());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                //Display error:
-                Toast.makeText(getApplicationContext(), "onErrorResponse: " + error.toString(), Toast.LENGTH_SHORT).show();
-                Log.d("onErrorResponse", "" + error.toString());
-            }
-        });
-
-        queue.add(request); //Add request to queue
-    }
-
-    public void removeRoute() {
-        try {
-            if (!polylines.isEmpty()) {
-                for (Polyline poly : polylines) {
-                    poly.remove();
-                }
-            }
-        }
-        catch (Exception e) {
-            System.out.println(e.toString());
-        }
+        return travelDistance[0];
     }
     // =============================================================================================
 }
