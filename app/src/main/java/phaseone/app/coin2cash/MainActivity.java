@@ -11,8 +11,11 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -108,6 +111,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // SIDE MENU HEADER:
     TextView side_menu_header_name;
     TextView side_menu_header_email;
+    RadioGroup rg_units;
+    RadioButton opt_metric;
+    RadioButton opt_imperial;
+    RadioGroup rg_icons;
+    RadioButton opt_default;
+    RadioButton opt_traditional;
+    CheckBox opt_atm;
+    CheckBox opt_bank;
+    CheckBox opt_casino;
+    CheckBox opt_cafe;
 
     // LOCATION DETAILS:
     BottomSheetDialog bs;
@@ -196,6 +209,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         side_menu_header_name.setText(USER_NAME);
         side_menu_header_email.setText(USER_EMAIL);
 
+        opt_metric = findViewById(MENU_ITEM_METRIC);
+        opt_imperial = findViewById(MENU_ITEM_IMPERIAL);
+        rg_units = new RadioGroup(this);
+        rg_units.addView(findViewById(MENU_ITEM_METRIC));
+        rg_units.addView(findViewById(MENU_ITEM_IMPERIAL));
+
+        opt_default = findViewById(MENU_ITEM_DEFAULT);
+        opt_traditional = findViewById(MENU_ITEM_TRADITIONAL);
+        rg_icons = new RadioGroup(this);
+        rg_icons.addView(findViewById(MENU_ITEM_DEFAULT));
+        rg_icons.addView(findViewById(MENU_ITEM_TRADITIONAL));
+
+        opt_atm = findViewById(R.id.menu_item_filter1);
+        opt_bank = findViewById(R.id.menu_item_filter2);
+        opt_casino = findViewById(R.id.menu_item_filter3);
+        opt_cafe = findViewById(R.id.menu_item_filter4);
+
         ui_nav_main();
 
         loadMap();
@@ -258,30 +288,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
                 switch (item.getItemId()) {
-                    case MENU_ITEM_METRIC:
-                        //
-                        break;
-                    case MENU_ITEM_IMPERIAL:
-                        //
-                        break;
-                    case MENU_ITEM_DEFAULT:
-                        //
-                        break;
-                    case MENU_ITEM_TRADITIONAL:
-                        //
-                        break;
-                    case MENU_ITEM_FILTER1:
-                        //
-                        break;
-                    case MENU_ITEM_FILTER2:
-                        //
-                        break;
-                    case MENU_ITEM_FILTER3:
-                        //
-                        break;
-                    case MENU_ITEM_FILTER4:
-                        //
-                        break;
                     case MENU_ITEM_SIGN_OUT:
                         initialize_login_components();
                         break;
@@ -291,6 +297,62 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
 
                 return false;
+            }
+        });
+
+        opt_metric.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //
+            }
+        });
+
+        opt_imperial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //
+            }
+        });
+
+        opt_default.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //
+            }
+        });
+
+        opt_traditional.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //
+            }
+        });
+
+        opt_atm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //
+            }
+        });
+
+        opt_bank.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //
+            }
+        });
+
+        opt_casino.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //
+            }
+        });
+
+        opt_cafe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //
             }
         });
     }
