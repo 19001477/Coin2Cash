@@ -52,11 +52,11 @@
                     app:actionViewClass="android.widget.CheckBox" />
                 <item
                     android:id="@+id/menu_item_filter3"
-                    android:title="Petrol Stations"
+                    android:title="Casinos"
                     app:actionViewClass="android.widget.CheckBox" />
                 <item
                     android:id="@+id/menu_item_filter4"
-                    android:title="Restaurants"
+                    android:title="Cafes"
                     app:actionViewClass="android.widget.CheckBox" />
             </menu>
         </item>
