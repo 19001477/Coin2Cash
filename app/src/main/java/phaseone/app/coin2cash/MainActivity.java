@@ -175,7 +175,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         side_menu = findViewById(R.id.side_menu);
 
-        //
+        View header = side_menu.getHeaderView(R.layout.side_menu_header);
+        side_menu_header_name = header.findViewById(R.id.side_menu_header_name);
+        side_menu_header_email = header.findViewById(R.id.side_menu_header_email);
+
+        side_menu_header_name.setText(USER_NAME);
+        side_menu_header_email.setText(USER_EMAIL);
 
         ui_nav_main();
 
@@ -213,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         btn_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                initialize_main_components();
+                initialize_main_components();//
             }
         });
 
