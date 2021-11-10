@@ -112,10 +112,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // SIDE MENU HEADER:
     TextView side_menu_header_name;
     TextView side_menu_header_email;
-    RadioGroup rg_units;
-    MenuItem opt_metric;
+    RadioButton opt_metric;
     RadioButton opt_imperial;
-    RadioGroup rg_icons;
     RadioButton opt_default;
     RadioButton opt_traditional;
     CheckBox opt_atm;
@@ -147,12 +145,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // VAR:
     // =============================================================================================
     userData user = new userData();
+    routeData routeData = new routeData();
 
-    private String travelTime;
-    private String travelDistance;
-
-    private Map<String, Boolean> userSettings = new HashMap<>();
-    private String units;
     private int markerIcon;
 
     private List<Polyline> polylines;
@@ -208,16 +202,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         side_menu_header_name.setText(user.getFullname());
         side_menu_header_email.setText(user.getEmail());
 
-        //opt_metric = side_menu.getMenu().getItem(0).getItemId(MENU_ITEM_METRIC);
-        opt_imperial = findViewById(MENU_ITEM_IMPERIAL);
+        opt_metric = (RadioButton) side_menu.getMenu().findItem(MENU_ITEM_METRIC).getActionView();
+        opt_imperial = (RadioButton) side_menu.getMenu().findItem(MENU_ITEM_IMPERIAL).getActionView();
 
-        opt_default = findViewById(MENU_ITEM_DEFAULT);
-        opt_traditional = findViewById(MENU_ITEM_TRADITIONAL);
+        opt_default = (RadioButton) side_menu.getMenu().findItem(MENU_ITEM_DEFAULT).getActionView();
+        opt_traditional = (RadioButton) side_menu.getMenu().findItem(MENU_ITEM_TRADITIONAL).getActionView();
 
-        opt_atm = findViewById(R.id.menu_item_filter1);
-        opt_bank = findViewById(R.id.menu_item_filter2);
-        opt_casino = findViewById(R.id.menu_item_filter3);
-        opt_cafe = findViewById(R.id.menu_item_filter4);
+        opt_atm = (CheckBox) side_menu.getMenu().findItem(MENU_ITEM_FILTER1).getActionView();
+        opt_bank = (CheckBox) side_menu.getMenu().findItem(MENU_ITEM_FILTER2).getActionView();
+        opt_casino = (CheckBox) side_menu.getMenu().findItem(MENU_ITEM_FILTER3).getActionView();
+        opt_cafe = (CheckBox) side_menu.getMenu().findItem(MENU_ITEM_FILTER4).getActionView();
 
         ui_nav_main();
 
@@ -280,17 +274,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
-                    case MENU_ITEM_METRIC:
-                    case MENU_ITEM_IMPERIAL:
-                    case MENU_ITEM_DEFAULT:
-                    case MENU_ITEM_TRADITIONAL:
-                    case MENU_ITEM_FILTER1:
-                    case MENU_ITEM_FILTER2:
-                    case MENU_ITEM_FILTER3:
-                    case MENU_ITEM_FILTER4:
-                        updateUserSettings();
-                        getPOIs();
-                        break;
                     case MENU_ITEM_SIGN_OUT:
                         initialize_login_components();
                         break;
@@ -298,10 +281,166 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         System.exit(0);
                         break;
                 }
-
                 return false;
             }
         });
+
+        opt_metric.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                user.setUnits(true);
+                postClick();
+            }
+        });
+
+        opt_imperial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                user.setUnits(false);
+                postClick();
+            }
+        });
+
+        opt_default.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                user.setMarkers(true);
+                postClick();
+            }
+        });
+
+        opt_traditional.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                user.setMarkers(false);
+                postClick();
+            }
+        });
+
+        opt_atm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (opt_atm.isChecked()) {
+                    user.setOpt1Setting(true);
+                }
+                else {
+                    user.setOpt1Setting(false);
+                }
+                postClick();
+            }
+        });
+
+        opt_bank.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (opt_bank.isChecked()) {
+                    user.setOpt2Setting(true);
+                }
+                else {
+                    user.setOpt2Setting(false);
+                }
+                postClick();
+            }
+        });
+
+        opt_casino.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (opt_casino.isChecked()) {
+                    user.setOpt3Setting(true);
+                }
+                else {
+                    user.setOpt3Setting(false);
+                }
+                postClick();
+            }
+        });
+
+        opt_cafe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (opt_cafe.isChecked()) {
+                    user.setOpt4Setting(true);
+                }
+                else {
+                    user.setOpt4Setting(false);
+                }
+                postClick();
+            }
+        });
+    }
+
+    private void postClick() {
+        int opt1 = 0, opt2 = 0, opt3 = 0, opt4 = 0, units = 0, markers = 0;
+
+
+        if (user.getUnits() == true) {
+            units = 1;
+        }
+        if (user.getMarkers() == true) {
+            markers = 1;
+        }
+        if (user.getOpt1Setting() == true) {
+            opt1 = 1;
+        }
+        if (user.getOpt2Setting() == true) {
+            opt2 = 1;
+        }
+        if (user.getOpt3Setting() == true) {
+            opt3 = 1;
+        }
+        if (user.getOpt4Setting() == true) {
+            opt4 = 1;
+        }
+
+        updateUserSettings(opt1, opt2, opt3, opt4, units, markers);
+
+        getUserDetails(user.getEmail());
+
+        updateChecks();
+        getPOIs();
+    }
+
+    private void updateChecks() {
+        if (user.getUnits() == true) {
+            opt_metric.setChecked(true);
+            opt_imperial.setChecked(false);
+        } else {
+            opt_metric.setChecked(false);
+            opt_imperial.setChecked(true);
+        }
+
+        if (user.getMarkers() == true) {
+            opt_default.setChecked(true);
+            opt_traditional.setChecked(false);
+        } else {
+            opt_default.setChecked(false);
+            opt_traditional.setChecked(true);
+        }
+
+        if (user.getOpt1Setting() == true) {
+            opt_atm.setChecked(true);
+        } else {
+            opt_atm.setChecked(false);
+        }
+
+        if (user.getOpt2Setting() == true) {
+            opt_bank.setChecked(true);
+        } else {
+            opt_bank.setChecked(false);
+        }
+
+        if (user.getOpt3Setting() == true) {
+            opt_casino.setChecked(true);
+        } else {
+            opt_casino.setChecked(false);
+        }
+
+        if (user.getOpt4Setting() == true) {
+            opt_cafe.setChecked(true);
+        } else {
+            opt_cafe.setChecked(false);
+        }
     }
 
     private void ui_nav_directions(LatLng coords) {
@@ -401,7 +540,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             @Override
                             public void run() {
                                 initialize_main_components();
-                                //Toast.makeText(getApplicationContext(), "" + userSettings.get("units"), Toast.LENGTH_SHORT).show();
                             }
                         }, 1000);
                     }
@@ -444,22 +582,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     user.setEmail(userDetails.getString("email"));
                     user.setFullname(userDetails.getString("fullname"));
 
-                    userSettings.put("units", Boolean.parseBoolean(userDetails.getString("unitsSetting")));
-                    units = userDetails.getString("unitsSetting");
-                    userSettings.put("markers", Boolean.parseBoolean(userDetails.getString("markerSetting")));
-                    userSettings.put("opt1", Boolean.parseBoolean(userDetails.getString("opt1Setting")));
-                    userSettings.put("opt2", Boolean.parseBoolean(userDetails.getString("opt2Setting")));
-                    userSettings.put("opt3", Boolean.parseBoolean(userDetails.getString("opt3Setting")));
-                    userSettings.put("opt4", Boolean.parseBoolean(userDetails.getString("opt4Setting")));
+                    user.setUnits(convertJSON(userDetails.getString("unitsSetting")));
+                    user.setMarkers(convertJSON(userDetails.getString("markerSetting")));
+                    user.setOpt1Setting(convertJSON(userDetails.getString("opt1Setting")));
+                    user.setOpt2Setting(convertJSON(userDetails.getString("opt2Setting")));
+                    user.setOpt3Setting(convertJSON(userDetails.getString("opt3Setting")));
+                    user.setOpt4Setting(convertJSON(userDetails.getString("opt4Setting")));
 
-                    if (userSettings.get("units") == false) {
-                        units = "metric";
+                    if (user.getUnits() == true) {
+                        routeData.setUnits("metric");
                     }
                     else {
-                        units = "imperial";
+                        routeData.setUnits("imperial");
                     }
 
-                    if (userSettings.get("markers") == false) {
+                    if (user.getMarkers() == true) {
                         //markerIcon = R.id
                     }
                     else {
@@ -484,19 +621,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         queue.add(request); //Add request to queue
     }
 
-    private void updateUserSettings() {
+    private boolean convertJSON(String input) {
+        if (input.equalsIgnoreCase("1")) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    private void updateUserSettings(int opt1, int opt2, int opt3, int opt4, int units, int markers) {
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
 
-        updateSettingsMap();
-
         String url ="https://coin2cash-p1.000webhostapp.com/updateUser.php?email=" + user.getEmail() + "&" +
-                    "opt1=" + userSettings.get("opt1") + "&" +
-                    "opt2=" + userSettings.get("opt2") + "&" +
-                    "opt3=" + userSettings.get("opt3") + "&" +
-                    "opt4=" + userSettings.get("opt4") + "&" +
-                    "units=" + userSettings.get("units") + "&" +
-                    "markers=" + userSettings.get("markers");
+                    "opt1=" + opt1 + "&" +
+                    "opt2=" + opt2 + "&" +
+                    "opt3=" + opt3 + "&" +
+                    "opt4=" + opt4 + "&" +
+                    "units=" + units + "&" +
+                    "markers=" + markers;
+
+        Log.d("", "updateUserSettings: " + url);
 
         //Store array from URL:
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
@@ -510,9 +656,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     if (isUpdated.equalsIgnoreCase("true")) {
                         System.out.println("Updated user settings successfully");
+                        Log.d("", "Updated user settings successfully");
                     }
                     else {
                         System.out.println("Could not update user settings");
+                        Log.d("", "Could not update user settings");
                     }
                 }
                 catch (Exception e) {
@@ -533,61 +681,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         queue.add(request); //Add request to queue
     }
 
-    private void updateSettingsMap() {
-        Boolean opt1, opt2, opt3, opt4, units, markers;
-
-        opt_metric.setChecked(true);
-
-        if (!opt_metric.isChecked()) {
-            units = false;
-        }
-        else {
-            units = true;
-        }
-
-        if (opt_default.isChecked()) {
-            markers = false;
-        }
-        else {
-            markers = true;
-        }
-
-        if (opt_atm.isChecked()) {
-            opt1 = true;
-        }
-        else {
-            opt1 = false;
-        }
-
-        if (opt_bank.isChecked()) {
-            opt2 = true;
-        }
-        else {
-            opt2 = false;
-        }
-
-        if (opt_casino.isChecked()) {
-            opt3 = true;
-        }
-        else {
-            opt3 = false;
-        }
-
-        if (opt_cafe.isChecked()) {
-            opt4 = true;
-        }
-        else {
-            opt4 = false;
-        }
-
-        userSettings.put("opt1", opt1);
-        userSettings.put("opt2", opt2);
-        userSettings.put("opt3", opt3);
-        userSettings.put("opt4", opt4);
-        userSettings.put("units", units);
-        userSettings.put("markers", markers);
-    }
-
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         map = googleMap;
@@ -597,7 +690,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         updateLocationUI();
         getDeviceLocation();
 
-        readAtmList();
+        Handler mHandler = new Handler();
+
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                getPOIs();
+            }
+        }, 1000);
+
+        //Toast.makeText(getApplicationContext(), "" + user.getUnits(), Toast.LENGTH_SHORT).show();
+
+        updateChecks();
 
         // adding on click listener to marker of google maps.
         map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
@@ -625,14 +729,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         btn_directions = bs.findViewById(R.id.btnDirections);
         btn_fav = bs.findViewById(R.id.btnFavourite);
 
-        txt_lat.setText("" + coords.latitude);
-        txt_long.setText("" + coords.longitude);
-        txt_distance.setText(getTravelDistance(returnDeviceLocation(), coords));
-        txt_time.setText(getTravelTime(returnDeviceLocation(), coords));
+        getTravelTime(returnDeviceLocation(), coords);
+        getTravelDistance(returnDeviceLocation(), coords);
 
         ui_nav_directions(coords);
 
-        bs.show();
+        Handler h = new Handler();
+
+        h.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                txt_lat.setText("" + coords.latitude);
+                txt_long.setText("" + coords.longitude);
+
+                txt_distance.setText(routeData.getDistance());
+                txt_time.setText(routeData.getDuration());
+
+                bs.show();
+            }
+        }, 1000);
     }
 
     private void configure_map(Bundle savedInstanceState) {
@@ -729,8 +844,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.e("Exception: %s", e.getMessage(), e);
         }
 
-        LatLng location = new LatLng(lastKnownLocation.getLatitude(),
-                lastKnownLocation.getLongitude());
+        LatLng location = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
 
         return location;
     }
@@ -851,13 +965,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .key("AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk")
                 .build();
         routing.execute();
-
-
-
-        String duration = getTravelTime(returnDeviceLocation(), destPosition);
-        String distance = getTravelDistance(returnDeviceLocation(), destPosition);
-
-        Toast.makeText(getApplicationContext(), "Duration = " + duration + " Distance = " + distance, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -901,16 +1008,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.e("check", "onRoutingCancelled");
     }
 
-    private String getTravelTime(LatLng origin, LatLng destination) {
+    private void getTravelTime(LatLng origin, LatLng destination) {
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String url ="https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=" + origin.latitude + "," + origin.longitude + "&" +
                 "destination=" + destination.latitude + "," + destination.longitude + "&" +
-                "units=" + units + "&" +
+                "units=" + routeData.getUnits() + "&" +
                 "key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
 
         //Store array from URL:
+        final String[] travelTime = new String[1];
+
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -918,7 +1027,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     JSONArray route = response.getJSONArray("routes"); //Store objects from the array
                     JSONArray legs = route.getJSONObject(0).getJSONArray("legs");
 
-                    travelTime = legs.getJSONObject(0).getJSONObject("duration").getString("text");
+                    routeData.setDuration(legs.getJSONObject(0).getJSONObject("duration").getString("text"));
                 }
                 catch (Exception e) {
                     //Display error:
@@ -936,17 +1045,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
         queue.add(request); //Add request to queue
-
-        return travelTime;
     }
 
-    private String getTravelDistance(LatLng origin, LatLng destination) {
+    private void getTravelDistance(LatLng origin, LatLng destination) {
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String url ="https://maps.googleapis.com/maps/api/directions/json?" +
                 "origin=" + origin.latitude + "," + origin.longitude + "&" +
                 "destination=" + destination.latitude + "," + destination.longitude + "&" +
-                "units=" + units + "&" +
+                "units=" + routeData.getUnits() + "&" +
                 "key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
 
         //Store array from URL:
@@ -957,7 +1064,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     JSONArray route = response.getJSONArray("routes"); //Store objects from the array
                     JSONArray legs = route.getJSONObject(0).getJSONArray("legs");
 
-                    travelDistance = legs.getJSONObject(0).getJSONObject("distance").getString("text");
+                    routeData.setDistance(legs.getJSONObject(0).getJSONObject("distance").getString("text"));
                 }
                 catch (Exception e) {
                     //Display error:
@@ -975,24 +1082,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
         queue.add(request); //Add request to queue
-
-        return travelDistance;
     }
 
     private void getPOIs() {
         map.clear();
         readAtmList();
 
-        if (userSettings.get("opt1")) {
+        if (user.getOpt1Setting() == true) {
             placePOIMarkers("atm");
         }
-        if (userSettings.get("opt2")) {
+        if (user.getOpt2Setting() == true) {
             placePOIMarkers("bank");
         }
-        if (userSettings.get("opt3")) {
+        if (user.getOpt3Setting() == true) {
             placePOIMarkers("casino");
         }
-        if (userSettings.get("opt4")) {
+        if (user.getOpt4Setting() == true) {
             placePOIMarkers("cafe");
         }
     }
@@ -1000,6 +1105,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void placePOIMarkers(String type) {
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+
         String url ="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + returnDeviceLocation().latitude + "," + returnDeviceLocation().longitude + "&radius=1000&types=" + type + "&key=AIzaSyDzT26Dm2Z7e8TTvynLydJuHlZGamQGBzk";
 
         //Store array from URL:
