@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     TextView side_menu_header_name;
     TextView side_menu_header_email;
     RadioGroup rg_units;
-    RadioButton opt_metric;
+    MenuItem opt_metric;
     RadioButton opt_imperial;
     RadioGroup rg_icons;
     RadioButton opt_default;
@@ -165,7 +165,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         configure_map(savedInstanceState);
         initialize_login_components();
-        //initialize_main_components();
     }
     // =============================================================================================
 
@@ -209,17 +208,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         side_menu_header_name.setText(user.getFullname());
         side_menu_header_email.setText(user.getEmail());
 
-        opt_metric = findViewById(MENU_ITEM_METRIC);
+        //opt_metric = side_menu.getMenu().getItem(0).getItemId(MENU_ITEM_METRIC);
         opt_imperial = findViewById(MENU_ITEM_IMPERIAL);
-//        rg_units = new RadioGroup(this);
-//        rg_units.addView(findViewById(MENU_ITEM_METRIC));
-//        rg_units.addView(findViewById(MENU_ITEM_IMPERIAL));
 
         opt_default = findViewById(MENU_ITEM_DEFAULT);
         opt_traditional = findViewById(MENU_ITEM_TRADITIONAL);
-//        rg_icons = new RadioGroup(this);
-//        rg_icons.addView(findViewById(MENU_ITEM_DEFAULT));
-//        rg_icons.addView(findViewById(MENU_ITEM_TRADITIONAL));
 
         opt_atm = findViewById(R.id.menu_item_filter1);
         opt_bank = findViewById(R.id.menu_item_filter2);
@@ -295,7 +288,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     case MENU_ITEM_FILTER2:
                     case MENU_ITEM_FILTER3:
                     case MENU_ITEM_FILTER4:
-                        //method
+                        updateUserSettings();
+                        getPOIs();
                         break;
                     case MENU_ITEM_SIGN_OUT:
                         initialize_login_components();
@@ -308,62 +302,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return false;
             }
         });
-
-//        opt_metric.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //
-//            }
-//        });
-//
-//        opt_imperial.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //
-//            }
-//        });
-//
-//        opt_default.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //
-//            }
-//        });
-//
-//        opt_traditional.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //
-//            }
-//        });
-//
-//        opt_atm.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //
-//            }
-//        });
-//
-//        opt_bank.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //
-//            }
-//        });
-//
-//        opt_casino.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //
-//            }
-//        });
-//
-//        opt_cafe.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //
-//            }
-//        });
     }
 
     private void ui_nav_directions(LatLng coords) {
@@ -463,6 +401,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             @Override
                             public void run() {
                                 initialize_main_components();
+                                //Toast.makeText(getApplicationContext(), "" + userSettings.get("units"), Toast.LENGTH_SHORT).show();
                             }
                         }, 1000);
                     }
@@ -597,7 +536,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void updateSettingsMap() {
         Boolean opt1, opt2, opt3, opt4, units, markers;
 
-        if (opt_metric.isChecked()) {
+        opt_metric.setChecked(true);
+
+        if (!opt_metric.isChecked()) {
             units = false;
         }
         else {
@@ -1038,8 +979,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return travelDistance;
     }
 
-    private void getPOIs(String type) {
+    private void getPOIs() {
+        map.clear();
+        readAtmList();
 
+        if (userSettings.get("opt1")) {
+            placePOIMarkers("atm");
+        }
+        if (userSettings.get("opt2")) {
+            placePOIMarkers("bank");
+        }
+        if (userSettings.get("opt3")) {
+            placePOIMarkers("casino");
+        }
+        if (userSettings.get("opt4")) {
+            placePOIMarkers("cafe");
+        }
     }
 
     public void placePOIMarkers(String type) {
