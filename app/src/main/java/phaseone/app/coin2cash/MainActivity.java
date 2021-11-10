@@ -552,10 +552,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     String isUpdated = updated.getString("updated");
 
                     if (isUpdated.equalsIgnoreCase("true")) {
-                        //
+                        System.out.println("Updated user settings successfully");
                     }
                     else {
-                        //
+                        System.out.println("Could not update user settings");
                     }
                 }
                 catch (Exception e) {
