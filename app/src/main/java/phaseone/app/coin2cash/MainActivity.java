@@ -527,43 +527,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         queue.add(request); //Add request to queue
     }
 
-    private void updateUser() {
+    private void updateUserSettings() {
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+
+        updateSettingsMap();
+
         String url ="https://coin2cash-p1.000webhostapp.com/updateUser.php?email=" + USER_EMAIL + "&" +
-                    "opt1=";
+                    "opt1=" + userSettings.get("opt1") + "&" +
+                    "opt2=" + userSettings.get("opt2") + "&" +
+                    "opt3=" + userSettings.get("opt3") + "&" +
+                    "opt4=" + userSettings.get("opt4") + "&" +
+                    "units=" + userSettings.get("units") + "&" +
+                    "markers=" + userSettings.get("markers");
 
         //Store array from URL:
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
                 try {
-                    JSONObject userDetails = (JSONObject) response.get(0); //Store objects from the array
+                    JSONObject updated = (JSONObject) response.get(0); //Store objects from the array
 
                     //Store values from the array:
-                    USER_EMAIL = userDetails.getString("email");
-                    USER_NAME = userDetails.getString("fullname");
+                    String isUpdated = updated.getString("updated");
 
-                    userSettings.put("units", Boolean.parseBoolean(userDetails.getString("unitsSetting")));
-                    units = userDetails.getString("unitsSetting");
-                    userSettings.put("markers", Boolean.parseBoolean(userDetails.getString("markerSetting")));
-                    userSettings.put("opt1", Boolean.parseBoolean(userDetails.getString("opt1Setting")));
-                    userSettings.put("opt2", Boolean.parseBoolean(userDetails.getString("opt2Setting")));
-                    userSettings.put("opt3", Boolean.parseBoolean(userDetails.getString("opt3Setting")));
-                    userSettings.put("opt4", Boolean.parseBoolean(userDetails.getString("opt4Setting")));
-
-                    if (userSettings.get("units") == false) {
-                        units = "metric";
+                    if (isUpdated.equalsIgnoreCase("true")) {
+                        //
                     }
                     else {
-                        units = "imperial";
-                    }
-
-                    if (userSettings.get("markers") == false) {
-                        //markerIcon = R.id
-                    }
-                    else {
-                        //markerIcon = R.id
+                        //
                     }
                 }
                 catch (Exception e) {
@@ -587,9 +579,54 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void updateSettingsMap() {
         Boolean opt1, opt2, opt3, opt4, units, markers;
 
-//        if () {
-//
-//        }
+        if (opt_metric.isChecked()) {
+            units = false;
+        }
+        else {
+            units = true;
+        }
+
+        if (opt_default.isChecked()) {
+            markers = false;
+        }
+        else {
+            markers = true;
+        }
+
+        if (opt_atm.isChecked()) {
+            opt1 = true;
+        }
+        else {
+            opt1 = false;
+        }
+
+        if (opt_bank.isChecked()) {
+            opt2 = true;
+        }
+        else {
+            opt2 = false;
+        }
+
+        if (opt_casino.isChecked()) {
+            opt3 = true;
+        }
+        else {
+            opt3 = false;
+        }
+
+        if (opt_cafe.isChecked()) {
+            opt4 = true;
+        }
+        else {
+            opt4 = false;
+        }
+
+        userSettings.put("opt1", opt1);
+        userSettings.put("opt2", opt2);
+        userSettings.put("opt3", opt3);
+        userSettings.put("opt4", opt4);
+        userSettings.put("units", units);
+        userSettings.put("markers", markers);
     }
 
     @Override
