@@ -587,7 +587,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void updateSettingsMap() {
         Boolean opt1, opt2, opt3, opt4, units, markers;
 
-        
+//        if () {
+//
+//        }
     }
 
     @Override
