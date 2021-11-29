@@ -129,7 +129,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     TextView txt_distance;
     TextView txt_time;
     Button btn_directions;
-    ImageView btn_fav;
 
     final int MENU_ITEM_METRIC = R.id.menu_item_metric;
     final int MENU_ITEM_IMPERIAL = R.id.menu_item_imperial;
@@ -454,13 +453,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 bs.dismiss();
             }
         });
-
-        btn_fav.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //
-            }
-        });
     }
     // =============================================================================================
 
@@ -737,7 +729,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         txt_distance = bs.findViewById(R.id.location_details_distance);
         txt_time = bs.findViewById(R.id.location_details_time);
         btn_directions = bs.findViewById(R.id.btnDirections);
-        btn_fav = bs.findViewById(R.id.btnFavourite);
 
         getTravelTime(returnDeviceLocation(), coords);
         getTravelDistance(returnDeviceLocation(), coords);
