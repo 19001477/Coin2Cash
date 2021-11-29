@@ -3,6 +3,7 @@ package phaseone.app.coin2cash;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -144,10 +145,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // VAR:
     // =============================================================================================
+    private final int WIDTH = 128;
+    private final int HEIGHT = 128;
     userData user = new userData();
     routeData routeData = new routeData();
 
-    private int markerIcon;
+    private BitmapDescriptor markerIcon;
 
     private List<Polyline> polylines;
     // =============================================================================================
@@ -596,11 +599,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         routeData.setUnits("imperial");
                     }
 
+                    Bitmap img;
+                    Bitmap temp;
+
                     if (user.getMarkers() == true) {
-                        //markerIcon = R.id
+                        temp = BitmapFactory.decodeResource(getResources(),R.drawable.default_icon);
+                        img = Bitmap.createScaledBitmap(temp, WIDTH, HEIGHT, false);
+                        markerIcon = BitmapDescriptorFactory.fromBitmap(img);
                     }
                     else {
-                        //markerIcon = R.id
+                        temp = BitmapFactory.decodeResource(getResources(),R.drawable.traditional_icon);
+                        img = Bitmap.createScaledBitmap(temp, WIDTH, HEIGHT, false);
+                        markerIcon = BitmapDescriptorFactory.fromBitmap(img);
                     }
                 }
                 catch (Exception e) {
@@ -925,7 +935,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                         LatLng coords = new LatLng(latitude, longitude);
 
-                        map.addMarker(new MarkerOptions().position(coords).title("Bitcoin ATM").flat(true).icon(bitmapDescriptorFromVector(getApplicationContext(), R.drawable.ic_btc_marker))).setTag(i);
+                        map.addMarker(new MarkerOptions().position(coords).title("Bitcoin ATM").flat(true).icon(markerIcon)).setTag(i);
                     }
                 }
                 catch (Exception e) {
@@ -995,7 +1005,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             //In case of more than 5 alternative routes
 
             PolylineOptions polyOptions = new PolylineOptions();
-            polyOptions.color(getResources().getColor(R.color.quantum_googblue600));
+            polyOptions.color(getResources().getColor(R.color.color_primary));
             polyOptions.width(10 + i * 3);
             polyOptions.addAll(route.get(i).getPoints());
             Polyline polyline = map.addPolyline(polyOptions);
@@ -1088,21 +1098,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.clear();
         readAtmList();
 
+        Bitmap img;
+        Bitmap temp;
+        BitmapDescriptor icon;
+
         if (user.getOpt1Setting() == true) {
-            placePOIMarkers("atm");
+            temp = BitmapFactory.decodeResource(getResources(),R.drawable.atm_icon);
+            img = Bitmap.createScaledBitmap(temp, WIDTH, HEIGHT, false);
+            icon = BitmapDescriptorFactory.fromBitmap(img);
+            placePOIMarkers("atm", icon);
         }
         if (user.getOpt2Setting() == true) {
-            placePOIMarkers("bank");
+            temp = BitmapFactory.decodeResource(getResources(),R.drawable.bank_icon);
+            img = Bitmap.createScaledBitmap(temp, WIDTH, HEIGHT, false);
+            icon = BitmapDescriptorFactory.fromBitmap(img);
+            placePOIMarkers("bank", icon);
         }
         if (user.getOpt3Setting() == true) {
-            placePOIMarkers("casino");
+            temp = BitmapFactory.decodeResource(getResources(),R.drawable.casino_icon);
+            img = Bitmap.createScaledBitmap(temp, WIDTH, HEIGHT, false);
+            icon = BitmapDescriptorFactory.fromBitmap(img);
+            placePOIMarkers("casino", icon);
         }
         if (user.getOpt4Setting() == true) {
-            placePOIMarkers("cafe");
+            temp = BitmapFactory.decodeResource(getResources(),R.drawable.cafe_icon);
+            img = Bitmap.createScaledBitmap(temp, WIDTH, HEIGHT, false);
+            icon = BitmapDescriptorFactory.fromBitmap(img);
+            placePOIMarkers("cafe", icon);
         }
     }
 
-    public void placePOIMarkers(String type) {
+    public void placePOIMarkers(String type, BitmapDescriptor icon) {
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
 
@@ -1120,7 +1146,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         LatLng location = new LatLng(Double.parseDouble(results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getString("lat")),
                                 Double.parseDouble(results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getString("lng")));
 
-                        map.addMarker(new MarkerOptions().position(location).title(name).flat(true)).setTag(type);
+                        map.addMarker(new MarkerOptions().icon(icon).position(location).title(name).flat(true)).setTag(type);
                     }
                 }
                 catch (Exception e) {
